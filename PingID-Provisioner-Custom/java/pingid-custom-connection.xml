@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<md:EntityDescriptor 
+	entityID="PingID Custom Connector"
+	urn:name="PingID Custom Connector" 
+	urn:baseUrl="https://idpxnyl3m.pingidentity.com/pingid"
+	urn:LogLevel="STANDARD" 
+	urn:isActive="false"
+	xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" 
+	xmlns:urn="urn:sourceid.org:saml2:metadata-extension:v2">
+	<md:Extensions>
+		<urn:EntityExtension>
+			<urn:DigitialSignatureAliases
+					includeX509inXmlSig="false" />
+			<urn:Encryption>
+				<urn:EncryptionPolicy 
+					SLOEncryptSubjectNameID="false"
+					EncryptSubjectNameID="false" 
+					EncryptAssertion="false"
+					KeyTransportAlgorithm="http://www.w3.org/2001/04/xmlenc#rsa-1_5"
+					EncryptionAlgorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc" />
+				<urn:DecryptionPolicy
+					SLOSubjectNameIDEncrypted="false" 
+					AttributeEncrypted="false"
+					SubjectNameIDEncrypted="false" 
+					AssertionEncrypted="false" />
+			</urn:Encryption>
+			<urn:Dependencies>
+				<urn:SigningKeyPairReference />
+				<urn:DsigVerificationCert />
+				<urn:SecondaryDsigVerificationCert />
+				<urn:DecryptionKeyPairReference />
+				<urn:EncryptionCert />
+				<urn:SoapAuth>
+					<soap:Incoming xmlns:soap="http://www.sourceid.org/2004/04/soapauth" />
+					<soap:Outgoing xmlns:soap="http://www.sourceid.org/2004/04/soapauth" />
+				</urn:SoapAuth>
+			</urn:Dependencies>
+		</urn:EntityExtension>
+	</md:Extensions>
+	<md:SPSSODescriptor 
+		WantAssertionsSigned="false"
+		AuthnRequestsSigned="false" 
+		protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+		<md:Extensions>
+			<urn:RoleExtension ArtifactTimeoutSeconds="60">
+				<urn:IncomingBindings 
+					SOAP="false" 
+					Redirect="false"
+					POST="true" 
+					Artifact="false" />
+				<urn:EnabledProfiles 
+					SPInitiatedSLO="false"
+					SPInitiatedSSO="false" 
+					IDPInitiatedSLO="false" 
+					IDPInitiatedSSO="false" />
+				<urn:SP 
+					ConnectionTargetType="Standard"
+					AssertionValidityBeforeMinutes="5" 
+					AssertionValidityAfterMinutes="5">
+					<urn:NameIdentifierMappingType
+						IncludeAdditionalTransientAttributes="false"
+						IncludeAdditionalAttributes="false" />
+				</urn:SP>
+			</urn:RoleExtension>
+		</md:Extensions>
+		<md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
+		</md:NameIDFormat>
+		<md:AssertionConsumerService 
+			isDefault="true"
+			Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" 
+			Location="/SamlConsumer.action"
+			index="0" />
+	</md:SPSSODescriptor>
+</md:EntityDescriptor>
