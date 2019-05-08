@@ -56,20 +56,22 @@ public class PingIDCustomSaasUserAPI implements SaasUserApi{
 		User updateUser = user;
 		String emailDeviceID = "";
 		if (this.notAllowedToUpdateUsers(connectionFields)) {
-			
 			String jsonUserResponse = this.getResponseStringBySaasGuid(connectionFields,user);
 			SaasUser pingidforworkforceUser = this.userBuilder.buildUser(jsonUserResponse,user,connectionFields);
-			emailDeviceID = this.getDeviceID(this.getUserJSON(jsonUserResponse,user,connectionFields));
 			pingidforworkforceUser.getCplUser().getResourceAttributes().add(ResourceFieldKey.ACTIVATE_USER.getLabel(),
 					(Values) updateUser.getResourceAttributes()
 							.get((Object) ResourceFieldKey.ACTIVATE_USER.getLabel()));
 			updateUser = pingidforworkforceUser.getCplUser();
 		}
 		
-		if(isEmailChanged(user) && emailDeviceID != null) {
-			HttpUriRequest request = this.requestBuilder.buildunpairDeviceRequest(connectionFields,user,emailDeviceID);
-			this.httpService.executeFullRequest((Resource) user, request, connectionFields);
-			request = this.requestBuilder.buildAddEmailRequest(connectionFields,user);
+		if(isEmailChanged(user) ) {
+			String jsonUserResponse = this.getResponseStringBySaasGuid(connectionFields,user);
+			emailDeviceID = this.getDeviceID(this.getUserJSON(jsonUserResponse,user,connectionFields));
+			if(emailDeviceID != null) {
+				HttpUriRequest request = this.requestBuilder.buildunpairDeviceRequest(connectionFields,user,emailDeviceID);
+				this.httpService.executeFullRequest((Resource) user, request, connectionFields);
+			}
+			HttpUriRequest request = this.requestBuilder.buildAddEmailRequest(connectionFields,user);
 			this.httpService.executeFullRequest((Resource) user, request, connectionFields);
 		}
 		HttpUriRequest request = this.requestBuilder.buildUpdateUserRequest(connectionFields, updateUser);
@@ -79,96 +81,15 @@ public class PingIDCustomSaasUserAPI implements SaasUserApi{
 	
 	
 	private String getDeviceID(JSONObject userObject) {
-		if(userObject.containsKey("responseBody")) {
-			JSONObject responseBody = (JSONObject) userObject.get("responseBody");
-			if(responseBody.containsKey("userDetails")) {
-				JSONObject userDetails = (JSONObject) responseBody.get("userDetails");
-				if(userDetails.containsKey("devicesDetails")) {
-					JSONArray devicesDetails = (JSONArray) userDetails.get("devicesDetails");
+				if(userObject.containsKey("devicesDetails")) {
+					JSONArray devicesDetails = (JSONArray) userObject.get("devicesDetails");
 					for (Object device :devicesDetails) {
 						JSONObject jsonDevice = (JSONObject) device;
 						if(jsonDevice.containsKey("type") && "EMAIL".equals(jsonDevice.get("type").toString().toUpperCase()))
 								return jsonDevice.get("deviceId").toString();
 					}
 				}
-				
-			}
-		}
 		return null;
-	}
-	
-	public static void main(String[] args) throws ParseException {
-		String jsonUser = "{\r\n" + 
-				"  \"responseBody\": {\r\n" + 
-				"    \"sameDeviceUsersDetails\": [],\r\n" + 
-				"    \"userDetails\": {\r\n" + 
-				"      \"userName\": \"TESTUSER8\",\r\n" + 
-				"      \"userInBypass\": false,\r\n" + 
-				"      \"email\": \"vikram+testuser8@likemindsconsulting.com\",\r\n" + 
-				"      \"lname\": \"User8\",\r\n" + 
-				"      \"userId\": 0,\r\n" + 
-				"      \"bypassExpiration\": null,\r\n" + 
-				"      \"deviceDetails\": {\r\n" + 
-				"        \"enrollment\": \"2019-04-03 10:54:34.536\",\r\n" + 
-				"        \"sentNotClaimedSms\": -1,\r\n" + 
-				"        \"sentClaimedSms\": -1,\r\n" + 
-				"        \"availableNotClaimedSms\": 0,\r\n" + 
-				"        \"availableClaimedSms\": 0,\r\n" + 
-				"        \"pushEnabled\": false,\r\n" + 
-				"        \"displayID\": \"vikram+testuser8@likemindsconsulting.com\",\r\n" + 
-				"        \"phoneNumber\": null,\r\n" + 
-				"        \"deviceRole\": \"PRIMARY\",\r\n" + 
-				"        \"deviceModel\": null,\r\n" + 
-				"        \"appVersion\": null,\r\n" + 
-				"        \"countryCode\": null,\r\n" + 
-				"        \"deviceId\": 1216975380183657000,\r\n" + 
-				"        \"deviceUuid\": \"10e390a9-143e-2a28-10e3-90a9143e2a28\",\r\n" + 
-				"        \"email\": \"vikram+testuser8@likemindsconsulting.com\",\r\n" + 
-				"        \"hasWatch\": false,\r\n" + 
-				"        \"nickname\": \"Email 1\",\r\n" + 
-				"        \"osVersion\": null,\r\n" + 
-				"        \"type\": \"Email\"\r\n" + 
-				"      },\r\n" + 
-				"      \"lastTransactions\": [],\r\n" + 
-				"      \"devicesDetails\": [\r\n" + 
-				"        {\r\n" + 
-				"          \"enrollment\": \"2019-04-03 10:54:34.536\",\r\n" + 
-				"          \"sentNotClaimedSms\": -1,\r\n" + 
-				"          \"sentClaimedSms\": -1,\r\n" + 
-				"          \"availableNotClaimedSms\": 0,\r\n" + 
-				"          \"availableClaimedSms\": 0,\r\n" + 
-				"          \"pushEnabled\": false,\r\n" + 
-				"          \"displayID\": \"vikram+testuser8@likemindsconsulting.com\",\r\n" + 
-				"          \"phoneNumber\": null,\r\n" + 
-				"          \"deviceRole\": \"PRIMARY\",\r\n" + 
-				"          \"deviceModel\": null,\r\n" + 
-				"          \"appVersion\": null,\r\n" + 
-				"          \"countryCode\": null,\r\n" + 
-				"          \"deviceId\": 1216975380183657000,\r\n" + 
-				"          \"deviceUuid\": \"10e390a9-143e-2a28-10e3-90a9143e2a28\",\r\n" + 
-				"          \"email\": \"vikram+testuser8@likemindsconsulting.com\",\r\n" + 
-				"          \"hasWatch\": false,\r\n" + 
-				"          \"nickname\": \"Email 1\",\r\n" + 
-				"          \"osVersion\": null,\r\n" + 
-				"          \"type\": \"Email\"\r\n" + 
-				"        }\r\n" + 
-				"      ],\r\n" + 
-				"      \"userEnabled\": true,\r\n" + 
-				"      \"fname\": \"Test\",\r\n" + 
-				"      \"picURL\": \"BF7R2EUAPTRVK76FCDA7TVBE4HTATL3HYI6PKABIJID3G2PXTLCPCRQ=\",\r\n" + 
-				"      \"spList\": [],\r\n" + 
-				"      \"lastLogin\": null,\r\n" + 
-				"      \"status\": \"ACTIVE\",\r\n" + 
-				"      \"role\": \"REGULAR\"\r\n" + 
-				"    },\r\n" + 
-				"    \"errorMsg\": \"ok\",\r\n" + 
-				"    \"errorId\": 200,\r\n" + 
-				"    \"uniqueMsgId\": \"webs_ZkhwWK-XR5iK7XgmB0fBsuNJ6F5xyIeBj9YtyRHB0PE\",\r\n" + 
-				"    \"clientData\": null\r\n" + 
-				"  }\r\n" + 
-				"}";
-		JSONParser parser = new JSONParser(); 
-		System.out.println(new PingIDCustomSaasUserAPI(null, null, null).getDeviceID((JSONObject) parser.parse(jsonUser)));
 	}
 	
 	private JSONObject getUserJSON(String jsonResponseString, User user, ConnectionFields connectionFields)
@@ -187,9 +108,11 @@ public class PingIDCustomSaasUserAPI implements SaasUserApi{
 			 return json;
 	}
 	
-
-	
 	private boolean isEmailChanged(User user) {
+		if(user.getResourceAttributes().containsKey("emailChanged")) {
+			String emailChanged = user.getResourceAttributes().getValueOf("emailChanged");
+			return Boolean.parseBoolean(emailChanged);
+		}
 		return false;
 	}
 	
@@ -205,11 +128,11 @@ public class PingIDCustomSaasUserAPI implements SaasUserApi{
 		HttpUriRequest request = this.requestBuilder.buildCreateUserRequest(connectionFields,
 				user);
 		this.httpService.executeFullRequest((Resource) user, request, connectionFields);
-		
 		// Add Email address to PingID devices on create
-		request = this.requestBuilder.buildAddEmailRequest(connectionFields,user);
-		this.httpService.executeFullRequest((Resource) user, request, connectionFields);
-		
+		if(user.getResourceAttributes().containsKey("email")) {
+			request = this.requestBuilder.buildAddEmailRequest(connectionFields,user);
+			this.httpService.executeFullRequest((Resource) user, request, connectionFields);
+		}
 	}
 
 	public void checkConnection(ConnectionFields connectionFields) throws ServiceException, SerializationException {

@@ -132,7 +132,7 @@ public class PingIDProvisioner extends AbstractSaasPlugin {
 		SaasUserData cloneUserData = this.cloneSaasUserDataWithSaasUserGuid(oldUserData.getSaasUserGuid(), newUserData);
 		ConnectionFields connectionFields = this.makeConnectionFields();
 		if (cloneUserData.isAccountEnabled()) {
-			if(!oldUserData.getAttributeFirstValue("email").toLowerCase().
+			if(oldUserData.getAttributeFirstValue("email")!=null && !oldUserData.getAttributeFirstValue("email").toLowerCase().
 					equals(newUserData.getAttributeFirstValue("email").toLowerCase()))
 				id=this.executeUpdateUserWithDeviceChange(cloneUserData);
 			else 

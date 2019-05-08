@@ -33,7 +33,7 @@ public class PingIDCustomRequestBuilder implements UserRequestBuilder {
 	
 	private static final String CREATE_USER_URL = "/pingid/rest/4/adduser/do";
 	private static final String OFFLINE_DEVICE_URL = "/pingid/rest/4/offlinepairing/do";
-	private static final String UNPAIR_DEVICE_URL = "pingid/rest/4/unpairdevice/do";
+	private static final String UNPAIR_DEVICE_URL = "/pingid/rest/4/unpairdevice/do";
 	
 	public HttpUriRequest buildAddEmailRequest(ConnectionFields connectionFields, User user) 
 			throws ResourceException, ServiceException{
@@ -71,7 +71,7 @@ public class PingIDCustomRequestBuilder implements UserRequestBuilder {
 		jsonDevice.put((Object) "username", userProfile.getUsername());
 		jsonDevice.put((Object) "type", "EMAIL");
 		jsonDevice.put((Object) "pairingData", userProfile.getEmail());
-		jsonDevice.put((Object) "validateUniqueDevice", "true");
+		jsonDevice.put((Object) "validateUniqueDevice", "false");
 		return jsonDevice;
 	}
 	
