@@ -65,7 +65,8 @@ public class ExportControlAdapter implements IdpAuthenticationAdapterV2 {
     private static final Logger log = LogManager.getLogger(ExportControlAdapter.class);
     
     private static final String USERNAME = "username";
-    private static final String FORM_TEMPLATE_NAME_FIELD = "Export Control Template Name";
+    private static final String FIELD_FORM_TEMPLATE_NAME = "Export Control Template Name";
+    private static final String FIELD_FORM_DECLINE_TEMPLATE_NAME = "Declined Template Name";
     private static final String FIELD_LDAP_DATA_SOURCE = "LDAP Data source";
     private static final String FIELD_LDAP_QUERY_DIRECTORY = "Query Directory";
     private static final String FIELD_LDAP_BASE_DOMAIN = "Base Domain";
@@ -82,6 +83,8 @@ public class ExportControlAdapter implements IdpAuthenticationAdapterV2 {
     private static final String DESC_LDAP_SEARCH_SCOPE = "OBJECT_SCOPE: limits the search to the base object. ONE_LEVEL_SCOPE: searches the immediate children of a base object, but excludes the base object itself. Default: SUBTREE_SCOPE: searches all child objects as well as the base object";
 	private static final String DESC_LDAP_ATTRIBUTE_NAME ="Attribute name that controls rendering of Privacy Policy screen";
 	private static final String DESC_LDAP_ATTRIBUTE_VALUE = "Attribute value to be considered as accepted";
+	private static final String DESC_DECLINE_TEMPLATE_NAME = "HTML template (in <pf_home>/server/default/conf/template) to render on decline. The default value is attribute.decline.form.template.html.";
+    
 	
 	private static final String DEFAULT_LDAP_SEARCH_SCOPE = "SUBTREE";
 	private static final boolean DEFAULT_LDAP_QUERY_DIRECTORY = true;
@@ -132,13 +135,18 @@ public class ExportControlAdapter implements IdpAuthenticationAdapterV2 {
     public IdpAuthnAdapterDescriptor getAdapterDescriptor() 
     {
     	 // Create input text field to represent name of velocity html template file
-        TextFieldDescriptor formTemplateConfig = new TextFieldDescriptor(FORM_TEMPLATE_NAME_FIELD, "HTML template (in <pf_home>/server/default/conf/template) to render for form submission. The default value is attribute.form.template.html.");
+        TextFieldDescriptor formTemplateConfig = new TextFieldDescriptor(FIELD_FORM_TEMPLATE_NAME, "HTML template (in <pf_home>/server/default/conf/template) to render for form submission. The default value is attribute.form.template.html.");
         formTemplateConfig.setDefaultValue("attribute.form.template.html");
         formTemplateConfig.addValidator(new RequiredFieldValidator());
+        
+        TextFieldDescriptor formDeclineTemplateConfig = new TextFieldDescriptor(FIELD_FORM_DECLINE_TEMPLATE_NAME,DESC_DECLINE_TEMPLATE_NAME);
+        formDeclineTemplateConfig.setDefaultValue("attribute.decline.form.template.html");
+        formDeclineTemplateConfig.addValidator(new RequiredFieldValidator());
         
         // Create an adapter GUI descriptor
         AdapterConfigurationGuiDescriptor configurationGuiDescriptor = new AdapterConfigurationGuiDescriptor("Export Control Adapter");
         configurationGuiDescriptor.addField(formTemplateConfig);
+        configurationGuiDescriptor.addField(formDeclineTemplateConfig);
         
         CheckBoxFieldDescriptor queryDirectoryField = new CheckBoxFieldDescriptor(
 				FIELD_LDAP_QUERY_DIRECTORY, DESC_LDAP_QUERY_DIRECTORY);
@@ -171,7 +179,7 @@ public class ExportControlAdapter implements IdpAuthenticationAdapterV2 {
         // Create an Idp adapter descriptor 
         Set<String> attributeContract = new HashSet<String>();
         attributeContract.add(USERNAME);
-        this.descriptor = new IdpAuthnAdapterDescriptor(this, "Export Control Adapter 1.0", attributeContract, true, configurationGuiDescriptor, false);
+        this.descriptor = new IdpAuthnAdapterDescriptor(this, "Export Control Adapter 1.1", attributeContract, true, configurationGuiDescriptor, false);
         return this.descriptor;
     }
 
@@ -211,11 +219,27 @@ public class ExportControlAdapter implements IdpAuthenticationAdapterV2 {
             return authnAdapterResponse;
         }
         
+        // Handle Decline if decline
+        if (StringUtils.isNotBlank(req.getParameter("pf.decline")))
+        {
+        	renderDeclineForm(req, resp, inParameters);
+            authnAdapterResponse.setAuthnStatus(AUTHN_STATUS.IN_PROGRESS);
+            return authnAdapterResponse;
+        }
+
+        
         // Handle Cancel if clicked
         if (StringUtils.isNotBlank(req.getParameter("pf.cancel")))
         {
             authnAdapterResponse.setErrorMessage("User clicked Cancel");
             authnAdapterResponse.setAuthnStatus(AUTHN_STATUS.FAILURE);
+            return authnAdapterResponse;
+        }
+        
+        // Handle Click return
+        if (StringUtils.isNotBlank(req.getParameter("pf.return"))) {
+        	renderForm(req, resp, inParameters);
+            authnAdapterResponse.setAuthnStatus(AUTHN_STATUS.IN_PROGRESS);
             return authnAdapterResponse;
         }
 
@@ -251,6 +275,29 @@ public class ExportControlAdapter implements IdpAuthenticationAdapterV2 {
         Map<String, Object> params = new HashMap<String, Object>();        
         params.put("resumePath", inParameters.get(IN_PARAMETER_NAME_RESUME_PATH));
         params.put("submit", "pf.submit");
+        params.put("decline", "pf.decline");
+        params.put("username", getUsernameFromLastAdapter(inParameters));
+        
+        // Load attribute-form-template.properties file and store it in the map
+        Locale userLocale = LocaleUtil.getUserLocale(req);
+        LanguagePackMessages lpm = new LanguagePackMessages("attribute-form-template", userLocale);
+        params.put("pluginTemplateMessages", lpm);
+        
+        try
+        {        
+            TemplateRendererUtil.render(req, resp, configuration.getFieldValue(FIELD_FORM_TEMPLATE_NAME), params);
+        }
+        catch (TemplateRendererUtilException e)
+        {
+            throw new AuthnAdapterException(e);
+        }
+    }
+    
+    private void renderDeclineForm(HttpServletRequest req, HttpServletResponse resp,  Map<String, Object> inParameters) throws AuthnAdapterException
+    {
+        Map<String, Object> params = new HashMap<String, Object>();        
+        params.put("resumePath", inParameters.get(IN_PARAMETER_NAME_RESUME_PATH));
+        params.put("return", "pf.return");
         params.put("cancel", "pf.cancel");
         params.put("username", getUsernameFromLastAdapter(inParameters));
         
@@ -261,7 +308,7 @@ public class ExportControlAdapter implements IdpAuthenticationAdapterV2 {
         
         try
         {        
-            TemplateRendererUtil.render(req, resp, configuration.getFieldValue(FORM_TEMPLATE_NAME_FIELD), params);
+            TemplateRendererUtil.render(req, resp, configuration.getFieldValue(FIELD_FORM_DECLINE_TEMPLATE_NAME), params);
         }
         catch (TemplateRendererUtilException e)
         {

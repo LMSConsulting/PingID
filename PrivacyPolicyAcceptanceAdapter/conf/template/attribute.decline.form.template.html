@@ -13,15 +13,15 @@ is not recommended as it may interfere with expected server behavior.
 <html lang="$locale.getLanguage()" dir="ltr">
 <head>
     <script type="text/javascript">
-        function postSubmit()
+        function postReturn()
         {
-            document.forms[0]['$submit'].value = 'clicked';
+            document.forms[0]['$return'].value = 'clicked';
             document.forms[0].submit();
         }
 
-        function postDecline()
+        function postCancel()
         {
-            document.forms[0]['$decline'].value = 'clicked';
+            document.forms[0]['$cancel'].value = 'clicked';
             document.forms[0].submit();
         }
 
@@ -69,15 +69,20 @@ is not recommended as it may interfere with expected server behavior.
         <div>
             <form method="POST" action="$resumePath" autocomplete="off">
 
+                <div class="ping-input-label">
+                    $pluginTemplateMessages.getMessage("usernameTitle")
+                </div>
+                <div><input id="username" type="text" size="10" name="username" value="joe" autocorrect="off" autocapitalize="off" autocompete="off" onKeyPress="return postOnReturn(event)" /></div>
+                <br><br>
 
                 <div class="ping-buttons">
-                    <input type="hidden" name="$submit" value=""/>
-                    <input type="hidden" name="$decline" value=""/>
+                    <input type="hidden" name="$return" value=""/>
+                    <input type="hidden" name="$cancel" value=""/>
 
-                    <a href="javascript:void(0)" onclick="postSubmit();" class="ping-button normal allow" title="$pluginTemplateMessages.getMessage("submitButtonTitle")">
+                    <a href="javascript:void(0)" onclick="postReturn();" class="ping-button normal allow" title="$pluginTemplateMessages.getMessage("returnButtonTitle")">
                         $pluginTemplateMessages.getMessage("submitButtonTitle")
                     </a>
-                    <a href="javascript:void(0)" onclick="postDecline();" class="ping-button blue deny" title="$pluginTemplateMessages.getMessage("declineButtonTitle")">
+                    <a href="javascript:void(0)" onclick="postCancel();" class="ping-button blue deny" title="$pluginTemplateMessages.getMessage("cancelButtonTitle")">
                         $pluginTemplateMessages.getMessage("cancelButtonTitle")
                     </a>
                 </div>
